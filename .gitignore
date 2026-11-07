@@ -1,0 +1,31 @@
+# Local maintenance notes, references, and prototypes
+.local/
+AGENTS.md
+CLAUDE.md
+.agents/
+.claude/
+.codex/
+reference/
+_old/
+
+# Font build inputs
+tools/*.otf
+tools/*.ttf
+tools/chars.txt
+
+# Local credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Generated files and editor metadata
+*.mov
+exports/
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+.idea/
+.vscode/

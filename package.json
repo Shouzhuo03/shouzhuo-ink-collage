@@ -1,0 +1,31 @@
+{
+  "name": "shouzhuo-ink-collage",
+  "version": "0.1.0",
+  "description": "Letterpress ink on Source Han Serif, cut-paper collage strips, and stop-motion entrances. Real-time WebGL2 rendering with 4K transparent PNG and lossless MOV export.",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src",
+    "fonts",
+    "sounds"
+  ],
+  "scripts": {
+    "dev": "python3 tools/serve.py"
+  },
+  "keywords": [
+    "webgl2",
+    "typography",
+    "chinese",
+    "source-han-serif",
+    "letterpress",
+    "collage",
+    "paper",
+    "motion-graphics",
+    "stop-motion"
+  ],
+  "license": "SEE LICENSE IN README.md"
+}
