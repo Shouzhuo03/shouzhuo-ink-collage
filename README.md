@@ -18,7 +18,7 @@ Cut a strip of paper, print ink-textured lettering on it, and paste a smaller pi
 
 Ink Collage is a JavaScript library rendered in WebGL2, with no framework or build-tool dependencies. The `preview/` page provides four palettes, a font-size control, **Shape** and **Texture** sliders, four entrances, a **Recut** button, and export controls. For more customization, edit the source.
 
-**Live demo:** not published yet. Run the preview locally for now; GitHub Pages can be enabled when the project is ready.
+**Live demo:** [Open Ink Collage](https://shouzhuo03.github.io/shouzhuo-ink-collage/).
 
 Run locally:
 
