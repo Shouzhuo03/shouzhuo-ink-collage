@@ -9,8 +9,8 @@ const stage = $('#stage'), canvas = $('#out'), frameEl = $('#frame'), msg = $('#
 
 /* ---------------- state ---------------- */
 
-const STORE = 'ink-collage-preview-v2';
-const DEFAULTS = { text: '铅字压进纸里，[尖角磨圆了]。', size: 72, shape: 30, texture: 30, palette: 'navy', seed: 1, entry: 'unfurl' };
+const STORE = 'ink-collage-preview-v3';
+const DEFAULTS = { text: '[守拙]归园田', size: 72, shape: 30, texture: 30, palette: 'navy', seed: 1, entry: 'unfurl' };
 let state = { ...DEFAULTS };
 try { state = { ...state, ...JSON.parse(localStorage.getItem(STORE) || '{}') }; } catch { /* private mode */ }
 if (!PALETTES[state.palette]) state.palette = DEFAULTS.palette;
