@@ -1,7 +1,7 @@
 export { InkStrip, STRIP_DEFAULTS, CURL_DEFAULTS } from './strip.js';
 export { ENTRIES, ENTRY_FPS, entryDuration, entryAt } from './entries.js';
 export { EntrySounds, SOUNDS_URL } from './sound.js';
-export { EXPORT, exportImage, exportVideo } from './export.js';
+export { EXPORT, exportImage, exportVideo, exportMp4 } from './export.js';
 export { writeMov, readWav } from './mov.js';
 export { lookFor, PALETTES, resolvePalette } from './look.js';
 export { foldsAt } from './folds.js';

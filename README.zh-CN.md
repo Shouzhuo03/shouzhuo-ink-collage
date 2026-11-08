@@ -141,8 +141,14 @@ button.onclick = () => { sounds.play('slap'); strip.play('slap', performance.now
 |---|---|---|
 | 图片 | PNG，3840 × 2160，透明底 | 纸条静止时的样子 |
 | 视频 | MOV，3840 × 2160，30 帧，透明底，无损，带音轨 | 当前选中的入场动画，加上 2 秒的静止抖动；音轨就是那个入场的音效 |
+| MP4 视频 · 白底 | MP4，H.264 + AAC，3840 × 2160，30 帧 | 同样的动画和音效，白色背景，不透明 |
+| MP4 视频 · 绿幕 / 蓝幕 | MP4，H.264 + AAC，3840 × 2160，30 帧 | 用于手机剪辑；导入 AM（Alight Motion）后用「色度键 / Chroma Key」去掉背景色 |
 
-视频用的是 QuickTime 的 **PNG 编码**：每一帧都是一张无损 PNG，带直通（straight）alpha。After Effects、Premiere 可以直接导入。macOS 自带的 QuickTime 播放器和 Final Cut 已经不支持 PNG 编码，打不开是正常的；要给它们用，可以用 ffmpeg 转成 ProRes 4444（这一步不是无损的）：
+H.264 不保存透明通道。绿幕、蓝幕 MP4 是抠像素材，不是真正的透明视频：在 AM 中添加「色度键」，吸取背景色后调整阈值和羽化。请选与纸张、文字、高亮纸片不同的底色；压缩与抠像可能损失细边缘和淡阴影。AM 的 iOS、安卓版本及设备解码能力不同，4K 导入仍需真机验收。
+
+MP4 在浏览器里通过 WebCodecs 逐帧编码，无需上传素材或安装额外依赖。默认目标码率 40 Mbps（实际文件大小随画面变化），音效使用 AAC-LC 128 kbps。需要支持 4K H.264 和 AAC 编码的浏览器、设备，并从 HTTPS 或 localhost 打开页面；不支持时会显示错误，不会输出其他编码或降低分辨率。
+
+MOV 视频用的是 QuickTime 的 **PNG 编码**：每一帧都是一张无损 PNG，带直通（straight）alpha。After Effects、Premiere 可以直接导入。它不是手机 AM 的兼容格式。macOS 自带的 QuickTime 播放器和 Final Cut 已经不支持 PNG 编码，打不开是正常的；要给它们用，可以用 ffmpeg 转成 ProRes 4444（这一步不是无损的）：
 
 ```bash
 ffmpeg -i 输入.mov -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -c:a pcm_s16le 输出.mov
@@ -153,15 +159,20 @@ ffmpeg -i 输入.mov -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -c:a p
 在代码里导出：
 
 ```js
-import { exportImage, exportVideo } from './src/index.js';
+import { exportImage, exportVideo, exportMp4 } from './src/index.js';
 const png = await exportImage(strip.params);                       // Blob
 const mov = await exportVideo(strip.params, 'unfurl', {            // Blob
   hold: 2,                                                         // 入场后再静止几秒
   onProgress: (done, total) => console.log(done, '/', total),
 });
+const mp4 = await exportMp4(strip.params, 'unfurl', {
+  background: '#00ff00', // 绿幕；默认 #ffffff；蓝幕用 #0000ff
+  hold: 2, fps: 30, sound: true,
+  onProgress: (done, total) => console.log(done, '/', total),
+});
 ```
 
-同一个画面只编码一次（定格动画有很多重复的帧），在测试用的 Mac 上，导出一段 2.7 秒的 4K 视频不到一秒，文件 110 MB 左右（纸条越长越大）。`writeMov()` 是单独的 MOV 写入器，也可以拿去封装别的 PNG 序列。
+MOV 中同一个画面只编码一次（定格动画有很多重复的帧），在测试用的 Mac 上，导出一段 2.7 秒的 4K MOV 不到一秒，文件 110 MB 左右（纸条越长越大）。`writeMov()` 是单独的 MOV 写入器，也可以拿去封装别的 PNG 序列。
 
 ## 摆放
 
@@ -186,7 +197,7 @@ strip.set({ palette: { paper: '#2e4a7a', back: '#dcd9ce', ink: '#efe8d6', highli
 - `lookFor(shape, texture)`、`PALETTES`、`resolvePalette()`。
 - `loadFont()`、`layoutText()`、`drawText()`、`parseMarks()`：排版工具。
 - `cutStrip()`、`cutPatch()`、`wiggle()`、`rng()`：剪纸轮廓和抖动；`foldsAt()`：某一时刻折角的几何。都可以单独用。
-- `exportImage(参数)`、`exportVideo(参数, 入场, 选项)`、`EXPORT`：4K 导出；`writeMov()`、`readWav()`：MOV 写入和 WAV 读取。
+- `exportImage(参数)`、`exportVideo(参数, 入场, 选项)`、`exportMp4(参数, 入场, 选项)`、`EXPORT`：4K PNG、MOV、H.264 MP4 导出；`writeMov()`、`readWav()`：MOV 写入和 WAV 读取。
 - `strip.frameId(秒)`：这一时刻画面的编号，编号相同画面就相同（导出时用来跳过重复帧）。
 
 ## 渲染流程
@@ -215,6 +226,7 @@ src/
   text.js      排版、字体加载、高亮标记
   sound.js     入场音效的播放
   export.js    4K 图片和视频导出
+  mp4.js       H.264 / AAC 的 MP4 封装
   mov.js       QuickTime MOV 写入器（PNG 视频 + PCM 音频）
 preview/       展示页面（index.html、app.js、mini.js 按钮上的小纸条）
 fonts/         思源宋体子集和它的许可

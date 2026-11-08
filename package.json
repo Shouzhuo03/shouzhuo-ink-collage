@@ -1,7 +1,7 @@
 {
   "name": "shouzhuo-ink-collage",
   "version": "0.1.0",
-  "description": "Letterpress ink on Source Han Serif, cut-paper collage strips, and stop-motion entrances. Real-time WebGL2 rendering with 4K transparent PNG and lossless MOV export.",
+  "description": "Letterpress ink on Source Han Serif, cut-paper collage strips, and stop-motion entrances. Real-time WebGL2 rendering with 4K transparent PNG, lossless MOV, and H.264 MP4 export.",
   "private": true,
   "type": "module",
   "main": "src/index.js",
