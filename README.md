@@ -147,8 +147,14 @@ Use the export button (导出) at the bottom of the preview panel.
 |---|---|---|
 | Image | PNG, 3840 × 2160, transparent | The strip in its resting pose |
 | Video | MOV, 3840 × 2160, 30 fps, transparent, lossless, with audio | The selected entrance followed by 2 seconds of resting tremble, with its matching sound |
+| MP4 · White | MP4, H.264 + AAC, 3840 × 2160, 30 fps | The same animation and sound, with an opaque white background |
+| MP4 · Green / Blue screen | MP4, H.264 + AAC, 3840 × 2160, 30 fps | Mobile editing footage; use Chroma Key in AM (Alight Motion) to remove the background |
 
-Video uses QuickTime **PNG encoding**: each frame is a lossless PNG with straight alpha. After Effects and Premiere can import it directly. macOS QuickTime Player and Final Cut no longer support this codec, so they cannot open these files. Convert to ProRes 4444 with ffmpeg if needed; that conversion is not lossless:
+H.264 does not preserve alpha. Green/blue screen MP4 files require keying: in AM, add Chroma Key, pick the background color, and adjust Threshold and Feather. Choose a color different from the paper, lettering, and highlights. Compression and keying may lose fine edges and faint shadows. AM versions and hardware decoders differ across iOS and Android; 4K import still requires device testing.
+
+MP4 is encoded frame by frame using WebCodecs, without uploads or additional dependencies. The default target bitrate is 40 Mbps (actual size varies with the image), with 128 kbps AAC-LC audio. Open the page over HTTPS or localhost using a browser and device supporting 4K H.264 and AAC encoding. Unsupported configurations produce an error rather than changing codec or resolution.
+
+MOV uses QuickTime **PNG encoding**: each frame is a lossless PNG with straight alpha. After Effects and Premiere can import it directly; it is not a mobile AM compatibility format. macOS QuickTime Player and Final Cut no longer support this codec, so they cannot open these files. Convert to ProRes 4444 with ffmpeg if needed; that conversion is not lossless:
 
 ```bash
 ffmpeg -i input.mov -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -c:a pcm_s16le output.mov
@@ -159,15 +165,20 @@ Exports render a 1920 × 1080 composition at 2× resolution, producing 4K output
 Export from code:
 
 ```js
-import { exportImage, exportVideo } from './src/index.js';
+import { exportImage, exportVideo, exportMp4 } from './src/index.js';
 const png = await exportImage(strip.params); // Blob.
 const mov = await exportVideo(strip.params, 'unfurl', { // Blob.
   hold: 2, // Seconds of resting tremble after the entrance.
   onProgress: (done, total) => console.log(done, '/', total),
 });
+const mp4 = await exportMp4(strip.params, 'unfurl', {
+  background: '#00ff00', // Green screen; defaults to #ffffff; use #0000ff for blue.
+  hold: 2, fps: 30, sound: true,
+  onProgress: (done, total) => console.log(done, '/', total),
+});
 ```
 
-Identical frames are encoded only once. In testing on a Mac, a 2.7-second 4K export took less than a second and produced a file of roughly 110 MB; the size depends on the strip. `writeMov()` is a standalone MOV writer that can also package other PNG sequences.
+MOV encodes identical frames only once. In testing on a Mac, a 2.7-second 4K MOV export took less than a second and produced a file of roughly 110 MB; the size depends on the strip. `writeMov()` is a standalone MOV writer that can also package other PNG sequences.
 
 ## Placement
 
@@ -192,7 +203,7 @@ strip.set({ palette: { paper: '#2e4a7a', back: '#dcd9ce', ink: '#efe8d6', highli
 - `lookFor(shape, texture)`, `PALETTES`, and `resolvePalette()`.
 - `loadFont()`, `layoutText()`, `drawText()`, `parseMarks()`, `fontString()`, `BUILTIN_FAMILY`, and `BUILTIN_FONT_URL`: font and text-layout helpers.
 - `cutStrip()`, `cutPatch()`, `wiggle()`, and `rng()`: cut-paper outlines and tremble helpers. `foldsAt()` computes fold geometry at a given time.
-- `exportImage(params)`, `exportVideo(params, entrance, options)`, and `EXPORT`: 4K export. `writeMov()` and `readWav()` handle MOV packaging and WAV reading.
+- `exportImage(params)`, `exportVideo(params, entrance, options)`, `exportMp4(params, entrance, options)`, and `EXPORT`: 4K PNG, MOV, and H.264 MP4 export. `writeMov()` and `readWav()` handle MOV packaging and WAV reading.
 - `strip.frameId(seconds)`: identify identical rendered frames, allowing the exporter to avoid encoding duplicates.
 
 ## Rendering pipeline
@@ -220,6 +231,7 @@ src/
   text.js          Text layout, font loading, and highlight markup
   sound.js         Entrance sound playback
   export.js        4K image and video export
+  mp4.js           H.264 / AAC MP4 packaging
   mov.js           QuickTime MOV writer (PNG video + PCM audio)
 preview/           Interactive demo and Canvas 2D button previews
 fonts/             Source Han Serif subset and its license
