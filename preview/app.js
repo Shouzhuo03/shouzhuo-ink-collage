@@ -1,6 +1,6 @@
 import {
   InkStrip, loadFont, PALETTES, ENTRIES, entryDuration, EntrySounds,
-  EXPORT, exportImage, exportVideo, CURL_DEFAULTS,
+  EXPORT, exportImage, exportVideo, exportMp4, CURL_DEFAULTS,
 } from '../src/index.js';
 import { MiniStrip, loopEntry } from './mini.js';
 
@@ -183,12 +183,20 @@ menu.addEventListener('click', async (e) => {
       download(await exportImage(strip.params), `${fileBase()}-4K.png`);
     } else {
       const name = state.entry;
+      const mp4 = kind.startsWith('mp4');
+      const backgrounds = { mp4: '#ffffff', 'mp4-green': '#00ff00', 'mp4-blue': '#0000ff' };
+      const suffixes = { mp4: '白底', 'mp4-green': '绿幕', 'mp4-blue': '蓝幕' };
       exportLabel.textContent = '正在导出视频…';
-      const blob = await exportVideo(strip.params, name, {
+      const base = fileBase();
+      const blob = await (mp4 ? exportMp4 : exportVideo)(strip.params, name, {
+        ...(mp4 ? { background: backgrounds[kind] } : {}),
         onProgress: (done, total) => { progress(done / total); exportLabel.textContent = `正在导出视频 ${Math.round((100 * done) / total)}%`; },
       });
-      download(blob, `${fileBase()}-${ENTRIES[name].label}-4K.mov`);
-      msg.textContent = `已导出 ${(blob.size / 1048576).toFixed(0)} MB。MOV 用的是 PNG 编码，After Effects、Premiere 可以直接导入；QuickTime 播放器打不开这种编码。`;
+      download(blob, `${base}-${ENTRIES[name].label}-4K${mp4 ? `-${suffixes[kind]}.mp4` : '.mov'}`);
+      const size = (blob.size / 1048576).toFixed(1);
+      msg.textContent = mp4
+        ? `已导出 ${size} MB，H.264 MP4（${suffixes[kind]}）。${kind === 'mp4' ? '白底不透明；需要叠加素材时可选绿幕或蓝幕。' : '在 AM 中添加「色度键 / Chroma Key」，选取背景色并调整阈值、羽化。抠像可能损失淡阴影和细边缘；请选与纸张、文字不同的底色。'}`
+        : `已导出 ${size} MB。MOV 用的是 PNG 编码，After Effects、Premiere 可以直接导入；QuickTime 播放器打不开这种编码。`;
     }
   } catch (err) {
     msg.textContent = `导出失败：${err.message}`;
